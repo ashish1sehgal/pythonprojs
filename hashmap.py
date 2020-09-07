@@ -151,7 +151,8 @@ class HashTable(object):
         # Until we discern that its not empty or found (and haven't stopped yet)
         while self.slots[position] != None and not found and not stop:
             
-            if self.slots[position] == key:# and expired(key,dObj)==False:
+            if self.slots[position] == key and expired(key,dObj)==False: # This line can be commented and next one uncommented to see if compaction works
+            #if self.slots[position] == key:# and expired(key,dObj)==False:
                 found = True
                 data = self.data[position]
                 
