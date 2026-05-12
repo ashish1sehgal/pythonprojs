@@ -1,0 +1,1076 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>DataProfiler Enterprise</title>
+<style>
+:root {
+  --bg:#07090E; --panel:#0D1017; --card:#121620; --hover:#181E2C;
+  --border:#1C2336; --bhi:#283050;
+  --amber:#F5A623; --alo:#8B5E10;
+  --teal:#00C9B1; --blue:#4A9EFF; --red:#FF4D6A; --rlo:#5C1B27;
+  --green:#00D97E; --purple:#A78BFA; --yellow:#FFD166;
+  --t1:#D8DDF0; --t2:#6B7591; --t3:#3D4560;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+html,body{height:100%;overflow:hidden;}
+body{background:var(--bg);color:var(--t1);font-family:'Segoe UI',system-ui,sans-serif;font-size:13px;}
+::-webkit-scrollbar{width:6px;height:6px;}
+::-webkit-scrollbar-track{background:var(--panel);}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px;}
+/* App shell */
+.app{display:flex;height:100vh;}
+/* Sidebar */
+.sidebar{width:200px;background:var(--panel);border-right:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0;}
+.logo{padding:18px 20px 14px;border-bottom:1px solid var(--border);}
+.logo-name{font-size:12px;font-weight:700;letter-spacing:.12em;color:var(--amber);text-transform:uppercase;}
+.logo-sub{font-size:10px;color:var(--t3);margin-top:2px;}
+.nav-items{flex:1;padding:8px 0;overflow-y:auto;}
+.nav-item{display:flex;align-items:center;gap:10px;padding:9px 20px;cursor:pointer;border-left:3px solid transparent;transition:background .12s;}
+.nav-item:hover{background:var(--hover);}
+.nav-item.active{background:var(--hover);border-left-color:var(--amber);}
+.nav-icon{font-size:14px;color:var(--t3);}
+.nav-item.active .nav-icon{color:var(--amber);}
+.nav-label{font-size:12px;font-weight:600;color:var(--t2);}
+.nav-item.active .nav-label{color:var(--t1);}
+.nav-sub{font-size:10px;color:var(--t3);}
+.sb-footer{padding:12px 20px;border-top:1px solid var(--border);font-size:10px;color:var(--t3);line-height:1.6;}
+/* Main */
+main{flex:1;overflow:hidden;display:flex;flex-direction:column;}
+.topbar{height:42px;border-bottom:1px solid var(--border);background:var(--panel);display:flex;align-items:center;padding:0 24px;gap:10px;flex-shrink:0;}
+.screens{flex:1;overflow:hidden;position:relative;}
+.screen{position:absolute;inset:0;overflow-y:auto;padding:24px;display:none;}
+.screen.active{display:block;}
+/* Typography helpers */
+.title{font-size:17px;font-weight:700;color:var(--t1);margin-bottom:2px;}
+.subtitle{font-size:11px;color:var(--t2);margin-bottom:18px;}
+.lbl{font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--t3);}
+.mono{font-family:'Consolas','Courier New',monospace;}
+/* Card */
+.card{background:var(--card);border:1px solid var(--border);border-radius:6px;}
+.pad{padding:16px;}
+/* Metric grid */
+.mgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:18px;}
+.mc{padding:12px 16px;}
+.mc-lbl{font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--t3);}
+.mc-val{font-size:20px;font-weight:700;font-family:'Consolas',monospace;margin:5px 0 3px;}
+.mc-sub{font-size:10px;color:var(--t2);}
+/* Badges */
+.badge{display:inline-flex;align-items:center;padding:1px 7px;border-radius:3px;font-size:10px;font-weight:700;letter-spacing:.06em;white-space:nowrap;border:1px solid;}
+.b-amber{color:var(--amber);background:#1F1500;border-color:var(--alo);}
+.b-teal{color:var(--teal);background:#002520;border-color:#005040;}
+.b-blue{color:var(--blue);background:#0A1628;border-color:#1A3060;}
+.b-red{color:var(--red);background:#1E0812;border-color:var(--rlo);}
+.b-green{color:var(--green);background:#001E10;border-color:#003020;}
+.b-gray{color:var(--t2);background:var(--card);border-color:var(--border);}
+.b-purple{color:var(--purple);background:#180E30;border-color:#2E1A60;}
+.b-yellow{color:var(--yellow);background:#231A00;border-color:#554000;}
+/* Status pills */
+.status{display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:4px;font-size:11px;font-weight:700;letter-spacing:.05em;border:1px solid;}
+.si{color:var(--teal);background:#002520;border-color:#005040;}
+.sc{color:var(--green);background:#001E10;border-color:#003020;}
+.sr{color:var(--amber);background:#1F1500;border-color:var(--alo);}
+.sp{color:var(--yellow);background:#231A00;border-color:#554000;}
+.sf{color:var(--red);background:#1E0812;border-color:var(--rlo);}
+.sn{color:var(--t2);background:var(--card);border-color:var(--border);}
+/* Buttons */
+.btn{padding:5px 14px;border-radius:4px;font-size:12px;font-weight:600;cursor:pointer;border:1px solid;font-family:inherit;transition:opacity .15s;}
+.btn-p{background:var(--amber);color:#0A0600;border-color:var(--amber);}
+.btn-p:hover{opacity:.85;}
+.btn-g{background:transparent;color:var(--t2);border-color:var(--border);}
+.btn-g:hover{background:var(--hover);color:var(--t1);}
+.btn-s{padding:3px 10px;font-size:11px;}
+/* Inputs */
+input[type=text],select{background:var(--card);border:1px solid var(--border);border-radius:4px;color:var(--t1);font-size:12px;padding:6px 10px;outline:none;font-family:inherit;}
+input[type=text]:focus,select:focus{border-color:var(--amber);}
+select option{background:var(--card);}
+/* Toolbar */
+.toolbar{display:flex;gap:10px;align-items:center;margin-bottom:14px;flex-wrap:wrap;}
+/* Callouts */
+.callout{padding:9px 14px;border-radius:4px;font-size:11px;margin-bottom:14px;display:flex;gap:8px;align-items:flex-start;border:1px solid;line-height:1.5;}
+.co-b{background:#0A1628;border-color:#1A3060;color:var(--blue);}
+.co-a{background:#1F1500;border-color:var(--alo);color:var(--amber);}
+.co-r{background:#1E0812;border-color:var(--rlo);color:var(--red);}
+.co-t{background:#002520;border-color:#005040;color:var(--teal);}
+/* Data table */
+.dt{width:100%;border-collapse:collapse;font-size:12px;}
+.dt th{padding:7px 14px;text-align:left;border-bottom:1px solid var(--border);background:var(--panel);}
+.dt td{padding:8px 14px;border-bottom:1px solid var(--border);}
+.dt tr:nth-child(even) td{background:var(--panel);}
+.dt tr:hover td{background:var(--hover);}
+.dt tr{cursor:pointer;}
+/* Matrix */
+.mat-header,.mat-row{display:grid;grid-template-columns:240px 78px 150px 285px 1fr;align-items:center;padding:0 16px;}
+.mat-header{height:34px;background:var(--panel);border-bottom:1px solid var(--border);border-radius:4px 4px 0 0;}
+#mat-viewport{height:520px;overflow-y:auto;border:1px solid var(--border);border-radius:0 0 4px 4px;position:relative;}
+#mat-spacer{position:absolute;top:0;left:0;right:0;pointer-events:none;}
+#mat-window{position:absolute;left:0;right:0;}
+.mat-row{height:44px;border-bottom:1px solid var(--border);}
+.mat-row:hover{background:var(--hover)!important;}
+.mat-alt{background:var(--panel);}
+.mat-adv{background:#1F1A00!important;}
+/* Pack buttons */
+.pack-row{display:flex;gap:2px;}
+.pbtn{padding:2px 7px;border-radius:3px;font-size:10px;font-weight:700;letter-spacing:.04em;cursor:pointer;border:1px solid transparent;background:transparent;color:var(--t3);font-family:inherit;}
+.pbtn:hover{background:var(--hover);}
+.p-basic{color:var(--teal)!important;background:#002520!important;border-color:#005040!important;}
+.p-standard{color:var(--blue)!important;background:#0A1628!important;border-color:#1A3060!important;}
+.p-advanced{color:var(--amber)!important;background:#1F1500!important;border-color:var(--alo)!important;}
+/* Blocked stats */
+.blk{font-size:10px;color:var(--t3);text-decoration:line-through;text-decoration-color:var(--rlo);cursor:help;}
+.blk-tag{font-size:9px;color:var(--red);opacity:.7;margin-left:4px;}
+/* ADVANCED meter */
+.adv-meter{display:flex;align-items:center;gap:12px;background:var(--card);border:1px solid var(--border);border-radius:4px;padding:8px 14px;}
+.meter-track{flex:1;height:4px;background:var(--border);border-radius:2px;position:relative;}
+.meter-fill{height:100%;border-radius:2px;transition:width .3s;}
+.meter-marker{position:absolute;top:-2px;height:8px;width:1px;background:var(--yellow);opacity:.7;}
+/* PSI heatmap */
+.psi-heatmap{display:flex;gap:2px;align-items:flex-end;height:72px;}
+.psi-bar{flex:1;border-radius:2px;min-height:4px;cursor:help;opacity:.85;transition:opacity .1s;}
+.psi-bar:hover{opacity:1;}
+/* Pass audit cells */
+.p-ran{font-size:11px;font-weight:700;color:var(--teal);}
+.p-skip{font-size:11px;font-weight:700;color:var(--red);cursor:help;}
+/* Validation overlay */
+#val-panel{position:fixed;bottom:0;left:200px;right:0;background:var(--panel);padding:16px 24px;z-index:200;box-shadow:0 -16px 48px rgba(0,0,0,.8);transform:translateY(100%);transition:transform .25s ease;border-top:2px solid var(--border);}
+#val-panel.open{transform:translateY(0);}
+/* BigQuery loader */
+.bq-loader{display:flex;flex-direction:column;align-items:center;justify-content:center;height:320px;gap:12px;}
+.progress-track{width:200px;height:3px;background:var(--border);border-radius:2px;overflow:hidden;}
+.progress-fill{width:40%;height:100%;background:var(--amber);animation:slide 1.2s linear infinite;border-radius:2px;}
+@keyframes slide{0%{transform:translateX(-250%)}100%{transform:translateX(350%)}}
+/* Two-col grid */
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+/* Null mini-bar */
+.null-track{height:4px;background:var(--border);border-radius:2px;width:110px;}
+.null-fill{height:100%;border-radius:2px;}
+/* Top-N bar */
+.topn-track{height:3px;background:var(--border);border-radius:2px;}
+.topn-fill{height:100%;border-radius:2px;}
+</style>
+</head>
+<body>
+<div class="app">
+  <nav class="sidebar">
+    <div class="logo">
+      <div class="logo-name">DataProfiler</div>
+      <div class="logo-sub">Enterprise · analytics-prod</div>
+    </div>
+    <div style="padding:8px 20px;border-bottom:1px solid var(--border);">
+      <span class="badge b-gray">team: Analytics</span>
+    </div>
+    <div class="nav-items" id="nav-list"></div>
+    <div class="sb-footer">
+      <a href="#" style="color:var(--t3);text-decoration:none;">Platform Admin ↗</a><br>
+      Cost thresholds · Team usage
+    </div>
+  </nav>
+  <main>
+    <div class="topbar">
+      <span style="font-size:11px;color:var(--t2);" id="topbar-title">Configure</span>
+      <span style="color:var(--t3);">·</span>
+      <span class="mono" style="font-size:11px;color:var(--t2);">dw.fact_orders</span>
+      <div style="margin-left:auto;display:flex;gap:10px;align-items:center;">
+        <span class="mono lbl" style="color:var(--t3);">2026-05-09 06:23 UTC</span>
+        <span class="badge b-gray">ORACLE</span>
+      </div>
+    </div>
+    <div class="screens">
+      <div class="screen" id="scr-config"></div>
+      <div class="screen" id="scr-runs"></div>
+      <div class="screen" id="scr-drill"></div>
+      <div class="screen" id="scr-ov"></div>
+      <div class="screen" id="scr-trend"></div>
+      <div class="screen" id="scr-audit"></div>
+    </div>
+  </main>
+</div>
+<!-- Validation slide-up panel -->
+<div id="val-panel">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+    <span id="val-title" style="font-size:14px;font-weight:700;"></span>
+    <div style="display:flex;gap:8px;">
+      <button class="btn btn-g btn-s" onclick="closeVal()">Dismiss</button>
+      <button class="btn btn-p btn-s" id="val-save-btn" onclick="closeVal()">Confirm &amp; Save</button>
+    </div>
+  </div>
+  <div id="val-body"></div>
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script>
+// ── SEEDED RNG (deterministic data) ──────────────────────────────────────
+var _seed = 42;
+function rnd() { _seed = (_seed * 9301 + 49297) % 233280; return _seed / 233280; }
+
+// ── DATA ─────────────────────────────────────────────────────────────────
+var CNAMES = ['customer_id','order_date','product_sku','amount_usd','status_code',
+  'created_at','updated_at','email_hash','region_code','channel_type',
+  'session_id','page_views','bounce_rate','user_agent','referrer_url',
+  'transaction_id','merchant_id','currency_code','exchange_rate','tax_amount',
+  'device_type','os_version','app_version','geo_lat','geo_lon',
+  'ip_addr','cohort_id','campaign_src','click_id','payment_method'];
+var DTYPES = ['VARCHAR','NUMBER','DATE','TIMESTAMP','INTEGER','FLOAT','BOOLEAN','CLOB'];
+var SCHEMA_C = ['PRE_PK','PRE_UNIQUE','PRE_HIGH','PRE_LOW','PRE_INDEXED','PRE_UNKNOWN'];
+var RT_C = [null,'PRIMARY_KEY','HIGH_CARDINALITY','CATEGORICAL','LOW_CARDINALITY','BINARY','CONSTANT','ALL_NULL'];
+var PSI_ST = ['STABLE','STABLE','STABLE','MODERATE','UNSTABLE'];
+
+var ALL_COLS = (function() {
+  var cols = [];
+  for (var i = 0; i < 2000; i++) {
+    var sc = SCHEMA_C[i % SCHEMA_C.length];
+    var rt = RT_C[i % RT_C.length];
+    var card = rt || sc;
+    var isPK = card === 'PRIMARY_KEY' || card === 'PRE_PK';
+    var isHi = card === 'HIGH_CARDINALITY' || card === 'PRE_HIGH';
+    var restr = isPK
+      ? 'PRIMARY KEY: percentiles, histograms & top-N blocked — meaningless on unique identifiers'
+      : isHi ? 'HIGH CARDINALITY: top-N blocked (distinct > 1,000). Exact distinct count: WARN.' : null;
+    cols.push({
+      id: i,
+      name: CNAMES[i % CNAMES.length] + (i >= CNAMES.length ? '_' + Math.floor(i / CNAMES.length) : ''),
+      dtype: DTYPES[i % DTYPES.length],
+      sc: sc, rt: rt, card: card,
+      isPK: isPK, isHi: isHi,
+      pack: i % 5 === 0 ? 'ADVANCED' : i % 3 === 0 ? 'STANDARD' : 'BASIC',
+      nullPct: Math.round(rnd() * 350) / 10,
+      distinct: Math.floor(rnd() * 9000000),
+      pBlock: isPK, tBlock: isPK || isHi, restr: restr,
+      psiSt: PSI_ST[i % 5],
+      nullFlag: rnd() > 0.82
+    });
+  }
+  return cols;
+}());
+
+var COL_PACKS = {};
+ALL_COLS.forEach(function(c) { COL_PACKS[c.id] = c.pack; });
+
+var RUNS = [
+  {id:'r-001',tbl:'dw.fact_orders',      team:'Analytics', st:'INGESTED',  started:'2026-05-09 06:12',dur:'4m 18s',rows:'8.2B', base:'r-000',adv:12},
+  {id:'r-002',tbl:'dw.dim_customers',    team:'CRM',       st:'COMPLETED', started:'2026-05-09 05:50',dur:'2m 41s',rows:'140M', base:null,   adv:7},
+  {id:'r-003',tbl:'ml.feature_store_v2', team:'ML Eng',    st:'PARTIAL',   started:'2026-05-09 04:30',dur:'11m 2s',rows:'3.1B', base:'r-p02',adv:25},
+  {id:'r-004',tbl:'raw.events_stream',   team:'Data Infra',st:'FAILED',    started:'2026-05-09 03:15',dur:'0m 55s',rows:'—',    base:null,   adv:0},
+  {id:'r-005',tbl:'dw.fact_orders',      team:'Analytics', st:'INGESTED',  started:'2026-05-08 06:08',dur:'4m 22s',rows:'8.1B', base:'r-004',adv:12},
+  {id:'r-006',tbl:'mart.segment_users',  team:'Growth',    st:'RUNNING',   started:'2026-05-09 06:20',dur:'—',     rows:'—',    base:null,   adv:3}
+];
+
+var HIST_DATA = (function() {
+  var d = [];
+  for (var i = 0; i < 14; i++) {
+    d.push({ bkt: (i*500) + '-' + ((i+1)*500),
+      cur: Math.round(800 + Math.sin(i)*400 + rnd()*300),
+      bas: Math.round(800 + Math.sin(i+0.5)*350 + rnd()*300) });
+  }
+  return d;
+}());
+
+var TOPN = [
+  {v:'USD',n:4182034,p:41.8},{v:'EUR',n:2391002,p:23.9},{v:'GBP',n:1204500,p:12.0},
+  {v:'CAD',n:891203,p:8.9},{v:'AUD',n:503100,p:5.0},{v:'JPY',n:412000,p:4.1},
+  {v:'CHF',n:201000,p:2.0},{v:'(other)',n:215161,p:2.3}
+];
+
+var PSI_VALS = [.02,.03,.02,.05,.08,.12,.09,.06,.04,.03,.02,.04,.15,.22,.18,.11,.07,.04,.03,.02,.04,.06,.04,.03,.02,.03,.05,.04,.03,.02];
+var TREND = (function() {
+  var d = [];
+  for (var i = 0; i < 30; i++) {
+    d.push({
+      run: 'r-' + String(i+1).padStart(3,'0'),
+      mn: 1247 + Math.sin(i*0.4)*80 + (rnd()-0.5)*30,
+      sd: 210  + Math.cos(i*0.3)*40 + (rnd()-0.5)*15,
+      di: 98200 + i*120 + (rnd()-0.5)*500,
+      psi: PSI_VALS[i],
+      dt: '05/' + String(i+1).padStart(2,'0')
+    });
+  }
+  return d;
+}());
+
+// ── HTML HELPERS ──────────────────────────────────────────────────────────
+var CARD_COLORS = {
+  PRIMARY_KEY:     ['#F5A623','#1F1500','#8B5E10'],
+  PRE_PK:          ['#F5A623','#141000','#6B4808'],
+  HIGH_CARDINALITY:['#4A9EFF','#0A1628','#1A3060'],
+  PRE_HIGH:        ['#4A9EFF','#0A1020','#102040'],
+  CATEGORICAL:     ['#00C9B1','#002520','#005040'],
+  PRE_LOW:         ['#00C9B1','#001E1A','#003830'],
+  LOW_CARDINALITY: ['#00D97E','#001E10','#003020'],
+  BINARY:          ['#A78BFA','#180E30','#2E1A60'],
+  CONSTANT:        ['#6B7591','#121620','#1C2336'],
+  ALL_NULL:        ['#FF4D6A','#1E0812','#5C1B27'],
+  PRE_UNIQUE:      ['#C084FC','#1A0E30','#350A50'],
+  PRE_INDEXED:     ['#6B7591','#121620','#1C2336'],
+  PRE_UNKNOWN:     ['#3D4560','#121620','#1C2336']
+};
+
+function cardBadge(cls) {
+  var col = CARD_COLORS[cls] || ['#3D4560','#121620','#1C2336'];
+  var lbl = cls.replace('PRE_','');
+  return '<span class="badge" style="color:' + col[0] + ';background:' + col[1] + ';border-color:' + col[2] + ';">' + lbl + '</span>';
+}
+
+function statusPill(s) {
+  var map = {INGESTED:'si',COMPLETED:'sc',RUNNING:'sr',PARTIAL:'sp',FAILED:'sf',PENDING:'sn'};
+  return '<span class="status ' + (map[s]||'sn') + '">' + s + '</span>';
+}
+
+function packBtns(colId, currentPack) {
+  var out = '<div class="pack-row">';
+  var packs = ['BASIC','STANDARD','ADVANCED'];
+  for (var i = 0; i < packs.length; i++) {
+    var p = packs[i];
+    var activeClass = currentPack === p ? (' p-' + p.toLowerCase()) : '';
+    out += '<button class="pbtn' + activeClass + '" onclick="setPack(' + colId + ',\'' + p + '\')">' + p + '</button>';
+  }
+  out += '</div>';
+  return out;
+}
+
+function advCount() {
+  var n = 0;
+  for (var id in COL_PACKS) { if (COL_PACKS[id] === 'ADVANCED') n++; }
+  return n;
+}
+
+// ── NAVIGATION ────────────────────────────────────────────────────────────
+var NAVS = [
+  {id:'config', lbl:'Configure',    sub:'Profile setup',     ico:'⚙'},
+  {id:'runs',   lbl:'Run List',      sub:'History & status',  ico:'▤'},
+  {id:'drill',  lbl:'Column Detail', sub:'Per-column metrics', ico:'◉'},
+  {id:'ov',     lbl:'Overview',      sub:'Cross-column scan',  ico:'▦'},
+  {id:'trend',  lbl:'Trend View',    sub:'Cross-run history',  ico:'⌇'},
+  {id:'audit',  lbl:'Audit',         sub:'Gating log',         ico:'⊛'}
+];
+var CUR = 'config';
+var CHARTS = {};
+
+function buildNav() {
+  var html = '';
+  for (var i = 0; i < NAVS.length; i++) {
+    var n = NAVS[i];
+    var active = n.id === CUR ? ' active' : '';
+    html += '<div class="nav-item' + active + '" onclick="go(\'' + n.id + '\')">';
+    html += '<span class="nav-icon">' + n.ico + '</span>';
+    html += '<div><div class="nav-label">' + n.lbl + '</div><div class="nav-sub">' + n.sub + '</div></div>';
+    html += '</div>';
+  }
+  document.getElementById('nav-list').innerHTML = html;
+}
+
+function go(id) {
+  CUR = id;
+  var screens = document.querySelectorAll('.screen');
+  for (var i = 0; i < screens.length; i++) screens[i].classList.remove('active');
+  var el = document.getElementById('scr-' + id);
+  el.classList.add('active');
+  var nav = NAVS.find(function(n) { return n.id === id; });
+  if (nav) document.getElementById('topbar-title').textContent = nav.lbl;
+  buildNav();
+  if (!el.dataset.rendered || id === 'trend') {
+    el.dataset.rendered = '1';
+    var fn = {config:renderConfig, runs:renderRuns, drill:renderDrill, ov:renderOv, trend:renderTrend, audit:renderAudit}[id];
+    if (fn) fn(el);
+  }
+}
+
+// ── SCREEN: CONFIGURE ────────────────────────────────────────────────────
+var matFilter = { search: '', pack: 'ALL', card: 'ALL' };
+var matCols = [];
+var ROW_H = 44;
+
+function getMatCols() {
+  return ALL_COLS.filter(function(c) {
+    var nm = c.name.indexOf(matFilter.search) >= 0;
+    var pk = matFilter.pack === 'ALL' || COL_PACKS[c.id] === matFilter.pack;
+    var ck = matFilter.card === 'ALL' || c.card === matFilter.card;
+    return nm && pk && ck;
+  });
+}
+
+function buildMatRow(col, idx) {
+  var pack = COL_PACKS[col.id];
+  var isAdv = pack === 'ADVANCED';
+  var rowCls = 'mat-row' + (isAdv ? ' mat-adv' : (idx % 2 ? ' mat-alt' : ''));
+  var nameColor = col.nullFlag ? '#FFD166' : '#D8DDF0';
+  var nullTag = col.nullFlag ? '<span style="font-size:9px;color:#FFD166;margin-left:4px;">↑null</span>' : '';
+  var blockedHtml = '';
+  if (col.pBlock) blockedHtml += '<span class="blk" title="' + (col.restr||'') + '">pctl</span> <span class="blk" title="' + (col.restr||'') + '">hist</span>';
+  if (col.tBlock) blockedHtml += '<span class="blk" title="' + (col.restr||'') + '"> topN</span>';
+  var blockedTag = (col.pBlock || col.tBlock) ? '<span class="blk-tag">⊘ blocked</span>' : '';
+  var rtTag = (col.rt && col.sc && col.rt !== col.sc) ? '<span title="Schema:' + col.sc + ' → Runtime:' + col.rt + '" style="font-size:9px;color:var(--t3);margin-left:3px;cursor:help;">⚡</span>' : '';
+  var psiTag = col.psiSt === 'UNSTABLE' ? '<span class="badge b-red" style="margin-left:5px;">DRIFT</span>'
+             : col.psiSt === 'MODERATE' ? '<span class="badge b-yellow" style="margin-left:5px;">MOD</span>' : '';
+  return '<div class="' + rowCls + '" data-id="' + col.id + '">'
+    + '<span class="mono" style="font-size:11px;color:' + nameColor + ';">' + col.name + nullTag + '</span>'
+    + '<span class="mono" style="font-size:10px;color:var(--t2);">' + col.dtype + '</span>'
+    + '<span>' + cardBadge(col.card) + rtTag + '</span>'
+    + packBtns(col.id, pack)
+    + '<div>' + blockedHtml + blockedTag + psiTag + '</div>'
+    + '</div>';
+}
+
+function drawMatrix(scrollTop) {
+  var si = Math.max(0, Math.floor(scrollTop / ROW_H) - 2);
+  var ei = Math.min(matCols.length, si + 28);
+  var win = document.getElementById('mat-window');
+  if (!win) return;
+  win.style.top = (si * ROW_H) + 'px';
+  var html = '';
+  for (var i = si; i < ei; i++) {
+    if (matCols[i]) html += buildMatRow(matCols[i], i);
+  }
+  win.innerHTML = html;
+}
+
+function initMatrix() {
+  matCols = getMatCols();
+  var spacer = document.getElementById('mat-spacer');
+  var vp = document.getElementById('mat-viewport');
+  if (spacer) spacer.style.height = (matCols.length * ROW_H) + 'px';
+  drawMatrix(0);
+  updateMatFooter();
+  if (vp) vp.onscroll = function() { drawMatrix(this.scrollTop); };
+}
+
+function updateMatFooter() {
+  var f = document.getElementById('mat-footer');
+  if (f) f.textContent = 'Showing ' + matCols.length.toLocaleString() + ' of 2,047 columns  ·  Virtual scroll: ' + Math.round(matCols.length * ROW_H / 1000) + 'k px total';
+}
+
+function setPack(id, pack) {
+  COL_PACKS[id] = pack;
+  var vp = document.getElementById('mat-viewport');
+  if (vp) drawMatrix(vp.scrollTop);
+  updateAdvMeter();
+}
+
+function updateAdvMeter() {
+  var adv = advCount();
+  var color = adv > 25 ? 'var(--red)' : adv > 10 ? 'var(--yellow)' : 'var(--teal)';
+  var fill = document.getElementById('meter-fill-bar');
+  var lbl  = document.getElementById('adv-count');
+  if (fill) { fill.style.width = Math.min(100, adv / 25 * 100) + '%'; fill.style.background = color; }
+  if (lbl)  { lbl.textContent = adv; lbl.style.color = color; }
+}
+
+function setMatFilter(key, val) {
+  matFilter[key] = val;
+  matCols = getMatCols();
+  var spacer = document.getElementById('mat-spacer');
+  var vp = document.getElementById('mat-viewport');
+  if (spacer) spacer.style.height = (matCols.length * ROW_H) + 'px';
+  if (vp) { vp.scrollTop = 0; drawMatrix(0); }
+  updateMatFooter();
+}
+
+function bulkApplyPack(pack) {
+  matCols.forEach(function(c) { COL_PACKS[c.id] = pack; });
+  var vp = document.getElementById('mat-viewport');
+  if (vp) drawMatrix(vp.scrollTop);
+  updateAdvMeter();
+}
+
+function jumpToAdvanced() {
+  matFilter.pack = 'ADVANCED';
+  var sel = document.getElementById('filter-pack');
+  if (sel) sel.value = 'ADVANCED';
+  setMatFilter('pack', 'ADVANCED');
+}
+
+function renderConfig(el) {
+  var adv = advCount();
+  var mColor = adv > 25 ? 'var(--red)' : adv > 10 ? 'var(--yellow)' : 'var(--teal)';
+  var mPct = Math.min(100, adv / 25 * 100);
+  var warnBadge = adv > 25 ? '<span class="badge b-red" style="margin-left:8px;">EXCEEDS LIMIT</span>'
+                : adv > 10 ? '<span class="badge b-yellow" style="margin-left:8px;">SOFT WARN &gt;10</span>' : '';
+  el.innerHTML = ''
+    + '<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px;">'
+    +   '<div><div class="title">Configure Profile \u2014 dw.fact_orders</div>'
+    +   '<div class="subtitle">Oracle \u00b7 analytics-prod \u00b7 2,047 columns \u00b7 ~8.2B rows</div></div>'
+    +   '<div style="display:flex;gap:8px;">'
+    +     '<button class="btn btn-g btn-s">Preview Effective Stats</button>'
+    +     '<button class="btn btn-g btn-s">Copy from Existing Config</button>'
+    +     '<button class="btn btn-p btn-s" onclick="openVal()">Save Configuration</button>'
+    +   '</div>'
+    + '</div>'
+    // Advanced meter
+    + '<div style="display:flex;gap:12px;margin-bottom:14px;align-items:center;">'
+    +   '<div class="adv-meter" style="flex:1;">'
+    +     '<span class="lbl" style="color:' + mColor + ';white-space:nowrap;">Advanced columns</span>'
+    +     '<div class="meter-track">'
+    +       '<div class="meter-fill" id="meter-fill-bar" style="width:' + mPct + '%;background:' + mColor + ';"></div>'
+    +       '<div class="meter-marker" style="left:40%;"></div>'
+    +     '</div>'
+    +     '<span class="mono" style="font-size:13px;font-weight:700;">'
+    +       '<a href="#" onclick="jumpToAdvanced();return false;" id="adv-count" style="color:' + mColor + ';text-decoration:none;">' + adv + '</a>'
+    +       '<span style="color:var(--t2);font-weight:400;"> / 25</span>'
+    +     '</span>'
+    +     warnBadge
+    +   '</div>'
+    +   '<div class="card" style="padding:8px 14px;white-space:nowrap;display:flex;gap:8px;align-items:center;">'
+    +     '<span class="lbl">Pass 2 sample</span>'
+    +     '<span class="mono" style="font-size:11px;color:var(--t2);">~1,000,000 rows (0.012% of 8.2B)</span>'
+    +   '</div>'
+    + '</div>'
+    // Toolbar
+    + '<div class="toolbar">'
+    +   '<input type="text" id="filter-search" placeholder="Search columns\u2026" style="width:220px;" oninput="setMatFilter(\'search\',this.value.toLowerCase())">'
+    +   '<select id="filter-pack" onchange="setMatFilter(\'pack\',this.value)">'
+    +     '<option value="ALL">All packs</option><option value="BASIC">BASIC</option>'
+    +     '<option value="STANDARD">STANDARD</option><option value="ADVANCED">ADVANCED</option>'
+    +   '</select>'
+    +   '<select onchange="setMatFilter(\'card\',this.value)" style="width:175px;">'
+    +     '<option value="ALL">All cardinality</option>'
+    +     '<option value="PRIMARY_KEY">PRIMARY KEY</option>'
+    +     '<option value="HIGH_CARDINALITY">HIGH CARDINALITY</option>'
+    +     '<option value="CATEGORICAL">CATEGORICAL</option>'
+    +     '<option value="LOW_CARDINALITY">LOW CARDINALITY</option>'
+    +     '<option value="BINARY">BINARY</option>'
+    +     '<option value="ALL_NULL">ALL NULL</option>'
+    +   '</select>'
+    +   '<div style="margin-left:auto;display:flex;gap:6px;align-items:center;">'
+    +     '<span class="lbl" style="white-space:nowrap;">Bulk filtered:</span>'
+    +     '<button class="btn btn-g btn-s" onclick="bulkApplyPack(\'BASIC\')">\u2192 BASIC</button>'
+    +     '<button class="btn btn-g btn-s" onclick="bulkApplyPack(\'STANDARD\')">\u2192 STANDARD</button>'
+    +     '<button class="btn btn-g btn-s" onclick="bulkApplyPack(\'ADVANCED\')">\u2192 ADVANCED</button>'
+    +   '</div>'
+    + '</div>'
+    // Matrix header
+    + '<div class="mat-header" style="margin-top:8px;">'
+    +   '<span class="lbl">Column Name</span><span class="lbl">Type</span>'
+    +   '<span class="lbl">Cardinality</span><span class="lbl">Stat Pack</span>'
+    +   '<span class="lbl">Blocked / Notes</span>'
+    + '</div>'
+    + '<div id="mat-viewport"><div id="mat-spacer"></div><div id="mat-window"></div></div>'
+    + '<div id="mat-footer" style="padding:5px 16px;font-size:11px;color:var(--t3);border:1px solid var(--border);border-top:none;border-radius:0 0 4px 4px;background:var(--panel);"></div>';
+  initMatrix();
+}
+
+// ── VALIDATION ─────────────────────────────────────────────────────────
+function openVal() {
+  var adv = advCount();
+  var hasErr = adv > 25;
+  var hasWarn = adv > 10 && adv <= 25;
+  var panel = document.getElementById('val-panel');
+  var title = document.getElementById('val-title');
+  var body  = document.getElementById('val-body');
+  var saveBtn = document.getElementById('val-save-btn');
+  panel.style.borderTopColor = hasErr ? 'var(--red)' : hasWarn ? 'var(--yellow)' : 'var(--teal)';
+  title.style.color = hasErr ? 'var(--red)' : hasWarn ? 'var(--yellow)' : 'var(--teal)';
+  title.textContent = hasErr ? '\u26d4 Save Blocked \u2014 Validation Failed'
+                    : hasWarn ? '\u26a0 Saved with Warnings' : '\u2713 Validation Passed';
+  saveBtn.style.display = hasErr ? 'none' : 'inline';
+  var html = '';
+  if (hasErr) html += '<div class="callout co-r" style="margin-bottom:8px;">'
+    + '<span style="font-weight:700;white-space:nowrap;">\u2715 ERROR</span>'
+    + '<span>ADVANCED column count (' + adv + ') exceeds hard limit of 25. Remove ' + (adv-25) + ' ADVANCED columns to proceed.</span>'
+    + '<button class="btn btn-g btn-s" style="margin-left:auto;white-space:nowrap;" onclick="jumpToAdvanced();closeVal()">Jump to ADVANCED \u2192</button>'
+    + '</div>';
+  if (hasWarn) html += '<div class="callout co-a" style="margin-bottom:8px;">'
+    + '<span style="font-weight:700;white-space:nowrap;">\u26a0 WARN</span>'
+    + '<span>' + adv + ' ADVANCED columns: each adds a full-table histogram GROUP BY. Consider performance impact on 8.2B-row table.</span>'
+    + '</div>';
+  if (!hasErr && !hasWarn) html = '<div style="font-size:12px;color:var(--teal);">\u2713 All validation checks passed. Configuration will be saved.</div>';
+  body.innerHTML = html;
+  panel.classList.add('open');
+}
+function closeVal() { document.getElementById('val-panel').classList.remove('open'); }
+
+// ── SCREEN: RUNS ──────────────────────────────────────────────────────
+var runSearch = '', runStatusFilter = 'ALL';
+
+function buildRunRows(data) {
+  var html = '';
+  for (var i = 0; i < data.length; i++) {
+    var r = data[i];
+    var baseCell = r.base
+      ? '<span class="mono" style="font-size:11px;color:var(--blue);">' + r.base + '</span>'
+      : '<span style="color:var(--t3);">\u2014</span>';
+    var actionCell = (r.st === 'INGESTED' || r.st === 'PARTIAL')
+      ? '<button class="btn btn-g btn-s" onclick="go(\'ov\')">View Results</button>'
+      : r.st === 'FAILED'
+      ? '<button class="btn btn-g btn-s" onclick="go(\'audit\')">Audit Log</button>' : '';
+    var advColor = r.adv > 20 ? 'var(--yellow)' : 'var(--t2)';
+    html += '<tr>'
+      + '<td><span class="mono" style="color:var(--amber);">' + r.id + '</span></td>'
+      + '<td><span class="mono" style="font-size:11px;">' + r.tbl + '</span></td>'
+      + '<td style="color:var(--t2);">' + r.team + '</td>'
+      + '<td>' + statusPill(r.st) + '</td>'
+      + '<td><span class="mono" style="font-size:10px;color:var(--t2);">' + r.started + '</span></td>'
+      + '<td><span class="mono">' + r.dur + '</span></td>'
+      + '<td><span class="mono" style="color:var(--t2);">' + r.rows + '</span></td>'
+      + '<td>' + baseCell + '</td>'
+      + '<td><span class="mono" style="color:' + advColor + ';">' + r.adv + '</span></td>'
+      + '<td>' + actionCell + '</td>'
+      + '</tr>';
+  }
+  return html;
+}
+
+function applyRunFilters() {
+  var sf = runStatusFilter;
+  var q  = runSearch;
+  var d = RUNS.filter(function(r) {
+    var sm = sf === 'ALL' || r.st === sf;
+    var tm = r.tbl.toLowerCase().indexOf(q) >= 0 || r.team.toLowerCase().indexOf(q) >= 0;
+    return sm && tm;
+  });
+  var tb = document.getElementById('runs-tbody');
+  if (tb) tb.innerHTML = buildRunRows(d);
+}
+
+function renderRuns(el) {
+  el.innerHTML = ''
+    + '<div class="title">Profile Runs</div>'
+    + '<div class="subtitle">All runs visible to your team (analytics-prod)</div>'
+    + '<div class="callout co-b"><span style="font-size:14px;">\u2139</span>'
+    + '<span><strong>INGESTED</strong> = results in Postgres &amp; BigQuery, viewable now. &nbsp;'
+    + '<strong>COMPLETED</strong> = profiler finished but Dataflow pipeline not yet ingested \u2014 results pending.</span></div>'
+    + '<div class="toolbar">'
+    +   '<input type="text" placeholder="Search table or team\u2026" style="width:250px;" oninput="runSearch=this.value.toLowerCase();applyRunFilters();">'
+    +   '<select onchange="runStatusFilter=this.value;applyRunFilters();" style="width:160px;">'
+    +     '<option value="ALL">All statuses</option>'
+    +     '<option value="INGESTED">INGESTED</option><option value="COMPLETED">COMPLETED</option>'
+    +     '<option value="RUNNING">RUNNING</option><option value="PARTIAL">PARTIAL</option>'
+    +     '<option value="FAILED">FAILED</option>'
+    +   '</select>'
+    +   '<div style="margin-left:auto;"><button class="btn btn-p btn-s">Trigger New Run</button></div>'
+    + '</div>'
+    + '<div style="border:1px solid var(--border);border-radius:6px;overflow:hidden;">'
+    +   '<table class="dt">'
+    +     '<thead><tr>'
+    +       '<th><span class="lbl">Run ID</span></th><th><span class="lbl">Table</span></th>'
+    +       '<th><span class="lbl">Team</span></th><th><span class="lbl">Status</span></th>'
+    +       '<th><span class="lbl">Started</span></th><th><span class="lbl">Duration</span></th>'
+    +       '<th><span class="lbl">Rows</span></th><th><span class="lbl">Baseline</span></th>'
+    +       '<th><span class="lbl">Adv Cols</span></th><th></th>'
+    +     '</tr></thead>'
+    +     '<tbody id="runs-tbody">' + buildRunRows(RUNS) + '</tbody>'
+    +   '</table>'
+    + '</div>';
+}
+
+// ── SCREEN: COLUMN DRILL-DOWN ─────────────────────────────────────────
+function renderDrill(el) {
+  var metricsData = [
+    ['Null count',       '2,184,031', '0.027% null rate',              'var(--teal)'],
+    ['Distinct (approx)','312',       'CATEGORICAL',                    'var(--blue)'],
+    ['Mean',             '1,247.38',  'CI: [1,246.12 \u2013 1,248.64]','var(--t1)'],
+    ['Stddev',           '214.9',     'CI: [213.1 \u2013 216.7]',      'var(--t1)'],
+    ['Skewness',         '0.33',      'Near-normal',                    'var(--green)'],
+    ['Kurtosis',         '2.87',      'Slight platykurtic',             'var(--t2)'],
+    ['PSI vs baseline',  '0.112',     'MODERATE drift',                 'var(--yellow)'],
+    ['Shapiro-Wilk',     'p\u2009=\u20090.041', 'Reject normality (\u03b1=0.05)', 'var(--red)']
+  ];
+  var metricsHtml = '';
+  for (var i = 0; i < metricsData.length; i++) {
+    var m = metricsData[i];
+    metricsHtml += '<div class="card mc"><div class="mc-lbl">' + m[0] + '</div>'
+      + '<div class="mc-val" style="color:' + m[3] + ';">' + m[1] + '</div>'
+      + '<div class="mc-sub">' + m[2] + '</div></div>';
+  }
+
+  var topNHtml = '';
+  for (var j = 0; j < TOPN.length; j++) {
+    var r = TOPN[j];
+    var op = r.v === '(other)' ? '0.4' : '0.9';
+    topNHtml += '<div style="margin-bottom:6px;">'
+      + '<div style="display:flex;justify-content:space-between;margin-bottom:2px;">'
+      + '<span class="mono" style="font-size:11px;">' + r.v + '</span>'
+      + '<div style="display:flex;gap:14px;">'
+      + '<span class="mono" style="font-size:11px;color:var(--t2);">' + r.n.toLocaleString() + '</span>'
+      + '<span class="mono" style="font-size:11px;color:var(--amber);">' + r.p + '%</span>'
+      + '</div></div>'
+      + '<div class="topn-track"><div class="topn-fill" style="width:' + r.p + '%;background:var(--amber);opacity:' + op + ';"></div></div>'
+      + '</div>';
+  }
+
+  var passData = [
+    ['Pass 1','Full population','✓ RAN',true,'null, min, max, mean, approx distinct'],
+    ['Pass 2','Sampled ~1M rows','✓ RAN',true,'skewness, kurtosis, percentiles'],
+    ['Pass 3','Full pop (gated)','✓ RAN',true,'top-N, patterns, histograms'],
+    ['Pass 4-SW','Shapiro-Wilk','✓ RAN',true,'2,000-row sub-sample'],
+    ['Pass 4-PSI','Drift vs baseline','✓ RAN',true,'Bucket-aligned histogram diff']
+  ];
+  var passHtml = '';
+  for (var k = 0; k < passData.length; k++) {
+    var p = passData[k];
+    passHtml += '<div class="card" style="padding:10px 12px;background:var(--panel);">'
+      + '<div class="lbl">' + p[0] + '</div>'
+      + '<div style="font-size:10px;color:var(--t2);margin:3px 0;">' + p[1] + '</div>'
+      + '<div class="' + (p[3] ? 'p-ran' : 'p-skip') + '">' + p[2] + '</div>'
+      + '<div style="font-size:10px;color:var(--t3);margin-top:3px;">' + p[4] + '</div>'
+      + '</div>';
+  }
+
+  el.innerHTML = ''
+    + '<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:18px;">'
+    +   '<div>'
+    +     '<div style="display:flex;gap:10px;align-items:center;margin-bottom:4px;">'
+    +       '<span class="mono" style="font-size:16px;font-weight:700;color:var(--amber);">amount_usd</span>'
+    +       '<span class="badge b-gray mono" style="font-size:10px;">FLOAT</span>'
+    +       cardBadge('CATEGORICAL')
+    +       '<span class="badge b-blue">STANDARD pack</span>'
+    +     '</div>'
+    +     '<div style="font-size:11px;color:var(--t2);">Run r-001 \u00b7 dw.fact_orders \u00b7 2026-05-09 06:12</div>'
+    +   '</div>'
+    +   '<div style="display:flex;gap:8px;">'
+    +     '<button class="btn btn-g btn-s">\u2190 Prev Column</button>'
+    +     '<button class="btn btn-g btn-s">Next Column \u2192</button>'
+    +     '<button class="btn btn-g btn-s" onclick="go(\'trend\')">View Trend</button>'
+    +   '</div>'
+    + '</div>'
+    + '<div class="mgrid">' + metricsHtml + '</div>'
+    + '<div class="g2">'
+    +   '<div class="card pad">'
+    +     '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">'
+    +       '<span class="lbl">Histogram vs baseline</span>'
+    +       '<div style="display:flex;gap:10px;font-size:10px;">'
+    +         '<span style="color:var(--teal);">\u25a0 Current</span>'
+    +         '<span style="color:var(--t3);">\u25a0 Baseline (r-000)</span>'
+    +         '<span class="badge b-yellow">PSI 0.112 MODERATE</span>'
+    +       '</div>'
+    +     '</div>'
+    +     '<div style="position:relative;height:200px;"><canvas id="hist-canvas" role="img" aria-label="Histogram comparing current and baseline distributions for amount_usd">Histogram for amount_usd.</canvas></div>'
+    +   '</div>'
+    +   '<div class="card pad">'
+    +     '<div class="lbl" style="margin-bottom:12px;">Top-N value distribution</div>'
+    +     topNHtml
+    +   '</div>'
+    + '</div>'
+    + '<div class="card pad" style="margin-top:16px;">'
+    +   '<div class="lbl" style="margin-bottom:12px;">Pass execution audit</div>'
+    +   '<div style="display:grid;grid-template-columns:repeat(5,1fr);gap:10px;">' + passHtml + '</div>'
+    + '</div>';
+
+  setTimeout(function() {
+    if (CHARTS['hist']) CHARTS['hist'].destroy();
+    var ctx = document.getElementById('hist-canvas');
+    if (!ctx) return;
+    CHARTS['hist'] = new Chart(ctx, {
+      type: 'bar',
+      data: { labels: HIST_DATA.map(function(d) { return d.bkt; }),
+        datasets: [
+          { label:'Current',  data: HIST_DATA.map(function(d) { return d.cur; }), backgroundColor:'rgba(0,201,177,.75)' },
+          { label:'Baseline', data: HIST_DATA.map(function(d) { return d.bas; }), backgroundColor:'rgba(60,70,100,.6)' }
+        ]
+      },
+      options: { responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}},
+        scales: { x:{ticks:{color:'#3D4560',font:{size:8}},grid:{color:'#1C2336'}},
+                  y:{ticks:{color:'#3D4560',font:{size:9}},grid:{color:'#1C2336'}} } }
+    });
+  }, 50);
+}
+
+// ── SCREEN: OVERVIEW ─────────────────────────────────────────────────
+var ovSort = 'nullPct', ovDir = 'desc', ovPsiFilter = 'ALL', ovSearch = '';
+
+function buildOvRows() {
+  var psiColor = { UNSTABLE:'var(--red)', MODERATE:'var(--yellow)', STABLE:'var(--teal)' };
+  var filtered = ALL_COLS.filter(function(c) {
+    return (ovPsiFilter === 'ALL' || c.psiSt === ovPsiFilter) && c.name.indexOf(ovSearch) >= 0;
+  });
+  var sorted = filtered.slice().sort(function(a,b) {
+    var av = a[ovSort] !== undefined ? a[ovSort] : '';
+    var bv = b[ovSort] !== undefined ? b[ovSort] : '';
+    if (ovDir === 'desc') return bv > av ? 1 : -1;
+    return av > bv ? 1 : -1;
+  });
+  var visible = sorted.slice(0, 100);
+  var html = '';
+  for (var i = 0; i < visible.length; i++) {
+    var c = visible[i];
+    var nc = c.nullPct > 20 ? 'var(--red)' : c.nullPct > 5 ? 'var(--yellow)' : 'var(--t2)';
+    var pkc = c.pack === 'ADVANCED' ? 'var(--amber)' : c.pack === 'STANDARD' ? 'var(--blue)' : 'var(--teal)';
+    var pc  = psiColor[c.psiSt] || 'var(--t2)';
+    var rowBg = c.psiSt === 'UNSTABLE' ? 'background:rgba(92,27,39,.4);' : c.psiSt === 'MODERATE' ? 'background:rgba(85,64,0,.4);' : '';
+    html += '<tr style="' + rowBg + '">'
+      + '<td><span class="mono" style="font-size:11px;">' + c.name + '</span></td>'
+      + '<td>' + cardBadge(c.card) + '</td>'
+      + '<td><span class="badge" style="color:' + pkc + ';background:var(--card);border-color:var(--border);">' + c.pack + '</span></td>'
+      + '<td><span class="mono" style="color:' + nc + ';">' + c.nullPct + '%</span></td>'
+      + '<td><span class="mono" style="color:var(--t2);font-size:11px;">' + c.distinct.toLocaleString() + '</span></td>'
+      + '<td><span class="badge" style="color:' + pc + ';background:var(--card);border-color:' + pc + ';">' + c.psiSt + '</span></td>'
+      + '<td><div class="null-track"><div class="null-fill" style="width:' + Math.min(100, c.nullPct*3) + '%;background:' + nc + ';"></div></div></td>'
+      + '</tr>';
+  }
+  html += '<tr><td colspan="7" style="text-align:center;color:var(--t3);font-size:11px;padding:10px;">Showing 100 of ' + filtered.length.toLocaleString() + ' columns</td></tr>';
+  return html;
+}
+
+function renderOvHeader() {
+  var cols = [['name','Column',220],['card','Cardinality',145],['pack','Pack',100],
+              ['nullPct','Null %',85],['distinct','Distinct',120],['psiSt','PSI Drift',110],['nb','Null rate',110]];
+  var html = '<tr>';
+  for (var i = 0; i < cols.length; i++) {
+    var k = cols[i][0], l = cols[i][1], w = cols[i][2];
+    var cur = ovSort === k;
+    var arrow = cur ? (ovDir === 'desc' ? ' \u2193' : ' \u2191') : '';
+    var style = 'width:' + w + 'px;' + (k !== 'nb' ? 'cursor:pointer;' : '');
+    var click = k !== 'nb' ? ' onclick="ovSortBy(\'' + k + '\')"' : '';
+    html += '<th style="' + style + '"' + click + '>'
+      + '<span class="lbl" style="color:' + (cur ? 'var(--amber)' : 'var(--t3)') + ';">' + l + arrow + '</span>'
+      + '</th>';
+  }
+  html += '</tr>';
+  return html;
+}
+
+function renderOv(el) {
+  var sm = {
+    UNSTABLE: ALL_COLS.filter(function(c) { return c.psiSt === 'UNSTABLE'; }).length,
+    MODERATE: ALL_COLS.filter(function(c) { return c.psiSt === 'MODERATE'; }).length,
+    STABLE:   ALL_COLS.filter(function(c) { return c.psiSt === 'STABLE';   }).length
+  };
+  var pills = [['ALL','All columns',ALL_COLS.length,'var(--t2)'],
+               ['UNSTABLE','\u26a0 Unstable',sm.UNSTABLE,'var(--red)'],
+               ['MODERATE','\u25c8 Moderate',sm.MODERATE,'var(--yellow)'],
+               ['STABLE','\u2713 Stable',sm.STABLE,'var(--teal)']];
+  var pillHtml = '';
+  for (var i = 0; i < pills.length; i++) {
+    var v=pills[i][0],l=pills[i][1],n=pills[i][2],c=pills[i][3];
+    var active = ovPsiFilter === v;
+    pillHtml += '<button onclick="setOvPsi(\'' + v + '\')" style="background:' + (active ? c+'22' : 'var(--card)') + ';border:1px solid ' + (active ? c : 'var(--border)') + ';border-radius:6px;padding:8px 16px;cursor:pointer;color:' + c + ';font-family:inherit;">'
+      + '<div style="font-size:11px;font-weight:700;letter-spacing:.05em;">' + l + '</div>'
+      + '<div style="font-size:20px;font-weight:700;font-family:monospace;margin-top:2px;">' + n.toLocaleString() + '</div>'
+      + '</button>';
+  }
+  el.innerHTML = ''
+    + '<div class="title">Cross-Column Overview \u2014 r-001</div>'
+    + '<div class="subtitle">dw.fact_orders \u00b7 2,047 columns \u00b7 INGESTED</div>'
+    + '<div style="display:flex;gap:10px;margin-bottom:14px;align-items:center;">'
+    +   pillHtml
+    +   '<div style="margin-left:auto;"><input type="text" placeholder="Filter columns\u2026" style="width:200px;" oninput="ovSearch=this.value.toLowerCase();refreshOv();"></div>'
+    + '</div>'
+    + '<div style="border:1px solid var(--border);border-radius:6px;overflow:hidden;">'
+    +   '<div style="max-height:560px;overflow-y:auto;">'
+    +     '<table class="dt" style="table-layout:fixed;width:100%;">'
+    +       '<thead id="ov-header" style="position:sticky;top:0;z-index:5;">' + renderOvHeader() + '</thead>'
+    +       '<tbody id="ov-tbody">' + buildOvRows() + '</tbody>'
+    +     '</table>'
+    +   '</div>'
+    + '</div>';
+}
+
+function setOvPsi(v) {
+  ovPsiFilter = v;
+  var el = document.getElementById('scr-ov');
+  el.dataset.rendered = '';
+  renderOv(el);
+}
+function ovSortBy(k) {
+  if (ovSort === k) ovDir = ovDir === 'desc' ? 'asc' : 'desc'; else { ovSort = k; ovDir = 'desc'; }
+  var hdr = document.getElementById('ov-header');
+  var tb  = document.getElementById('ov-tbody');
+  if (hdr) hdr.innerHTML = renderOvHeader();
+  if (tb)  tb.innerHTML  = buildOvRows();
+}
+function refreshOv() {
+  var tb = document.getElementById('ov-tbody');
+  if (tb) tb.innerHTML = buildOvRows();
+}
+
+// ── SCREEN: TREND VIEW ───────────────────────────────────────────────
+function renderTrend(el) {
+  el.innerHTML = ''
+    + '<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:18px;">'
+    +   '<div><div class="title">Trend View \u2014 amount_usd</div>'
+    +   '<div class="subtitle">30 runs \u00b7 dw.fact_orders \u00b7 BigQuery analytics store</div></div>'
+    +   '<div style="display:flex;gap:8px;align-items:center;">'
+    +     '<span class="badge b-blue">SOURCE: BIGQUERY</span>'
+    +     '<span class="badge b-amber" id="bq-badge">QUERYING\u2026</span>'
+    +   '</div>'
+    + '</div>'
+    + '<div id="bq-loader" class="bq-loader">'
+    +   '<div style="font-size:12px;color:var(--t2);">Querying BigQuery \u2014 5\u201310s expected\u2026</div>'
+    +   '<div class="progress-track"><div class="progress-fill"></div></div>'
+    +   '<div style="font-size:10px;color:var(--t3);">Postgres serves &lt;2s for recent runs \u00b7 BigQuery for historical trend data</div>'
+    + '</div>'
+    + '<div id="bq-charts" style="display:none;flex-direction:column;gap:16px;">'
+    +   '<div class="card pad">'
+    +     '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">'
+    +       '<span class="lbl">Mean &amp; Stddev over 30 runs</span>'
+    +       '<div style="display:flex;gap:14px;font-size:10px;">'
+    +         '<span><span style="display:inline-block;width:12px;height:2px;background:var(--teal);vertical-align:middle;margin-right:4px;"></span>Mean</span>'
+    +         '<span><span style="display:inline-block;width:12px;height:2px;background:var(--purple);vertical-align:middle;margin-right:4px;"></span>Stddev</span>'
+    +       '</div>'
+    +     '</div>'
+    +     '<div style="position:relative;height:200px;"><canvas id="trend-c1" role="img" aria-label="Line chart of mean and stddev across 30 runs">Mean and stddev trend.</canvas></div>'
+    +   '</div>'
+    +   '<div class="card pad">'
+    +     '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">'
+    +       '<span class="lbl">PSI drift heatmap \u2014 30 runs</span>'
+    +       '<div style="display:flex;gap:10px;font-size:10px;">'
+    +         '<span style="color:var(--teal);">\u25a0 STABLE &lt;0.1</span>'
+    +         '<span style="color:var(--yellow);">\u25a0 MODERATE 0.1\u20130.2</span>'
+    +         '<span style="color:var(--red);">\u25a0 UNSTABLE \u22650.2</span>'
+    +       '</div>'
+    +     '</div>'
+    +     '<div id="psi-hm" class="psi-heatmap"></div>'
+    +     '<div style="display:flex;justify-content:space-between;margin-top:4px;font-size:9px;color:var(--t3);font-family:monospace;" id="psi-labels"></div>'
+    +   '</div>'
+    +   '<div class="card pad">'
+    +     '<div class="lbl" style="margin-bottom:12px;">Approx distinct count over 30 runs</div>'
+    +     '<div style="position:relative;height:140px;"><canvas id="trend-c2" role="img" aria-label="Area chart of distinct count across 30 runs">Distinct count trend.</canvas></div>'
+    +   '</div>'
+    + '</div>';
+
+  setTimeout(function() {
+    var loader = document.getElementById('bq-loader');
+    var charts = document.getElementById('bq-charts');
+    var badge  = document.getElementById('bq-badge');
+    if (loader) loader.style.display = 'none';
+    if (charts) charts.style.display = 'flex';
+    if (badge)  badge.style.display  = 'none';
+    initTrendCharts();
+  }, 2200);
+}
+
+function initTrendCharts() {
+  ['trend-c1','trend-c2'].forEach(function(id) { if (CHARTS[id]) CHARTS[id].destroy(); });
+  var labels = TREND.map(function(d) { return d.dt; });
+
+  var c1 = document.getElementById('trend-c1');
+  if (c1) CHARTS['trend-c1'] = new Chart(c1, {
+    type: 'line',
+    data: { labels: labels, datasets: [
+      { label:'Mean', data:TREND.map(function(d){return Math.round(d.mn*10)/10;}), borderColor:'#00C9B1', borderWidth:2, pointRadius:0, tension:.3, yAxisID:'y' },
+      { label:'Stddev', data:TREND.map(function(d){return Math.round(d.sd*10)/10;}), borderColor:'#A78BFA', borderWidth:1.5, borderDash:[4,2], pointRadius:0, tension:.3, yAxisID:'y2' }
+    ]},
+    options: { responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}},
+      scales: { x:{ticks:{color:'#3D4560',font:{size:9}},grid:{color:'#1C2336'}},
+                y:{ticks:{color:'#3D4560',font:{size:9}},grid:{color:'#1C2336'}},
+                y2:{position:'right',ticks:{color:'#3D4560',font:{size:9}},grid:{display:false}} } }
+  });
+
+  var c2 = document.getElementById('trend-c2');
+  if (c2) CHARTS['trend-c2'] = new Chart(c2, {
+    type: 'line',
+    data: { labels: labels, datasets: [
+      { label:'Distinct', data:TREND.map(function(d){return Math.round(d.di);}), borderColor:'#4A9EFF', backgroundColor:'rgba(74,158,255,.1)', fill:true, pointRadius:0, tension:.3, borderWidth:2 }
+    ]},
+    options: { responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}},
+      scales: { x:{ticks:{color:'#3D4560',font:{size:9}},grid:{color:'#1C2336'}},
+                y:{ticks:{color:'#3D4560',font:{size:9}},grid:{color:'#1C2336'}} } }
+  });
+
+  var hm = document.getElementById('psi-hm');
+  var lbs = document.getElementById('psi-labels');
+  if (hm) {
+    var hmHtml = '';
+    for (var i = 0; i < TREND.length; i++) {
+      var d = TREND[i];
+      var c = d.psi >= .2 ? '#FF4D6A' : d.psi >= .1 ? '#FFD166' : '#00C9B1';
+      var h = Math.max(8, Math.round(d.psi * 320));
+      var st = d.psi >= .2 ? 'UNSTABLE' : d.psi >= .1 ? 'MODERATE' : 'STABLE';
+      hmHtml += '<div class="psi-bar" style="height:' + h + 'px;background:' + c + ';" title="' + d.run + ' \u00b7 ' + d.dt + ' \u00b7 PSI: ' + d.psi.toFixed(3) + ' \u00b7 ' + st + '"></div>';
+    }
+    hm.innerHTML = hmHtml;
+  }
+  if (lbs) {
+    var lbHtml = '';
+    for (var j = 0; j < TREND.length; j++) {
+      if (j % 5 === 0) lbHtml += '<span>' + TREND[j].dt + '</span>';
+    }
+    lbs.innerHTML = lbHtml;
+  }
+}
+
+// ── SCREEN: AUDIT ────────────────────────────────────────────────────
+var GATING = (function() {
+  var g = [];
+  for (var i = 0; i < 60; i++) {
+    var c = ALL_COLS[i];
+    g.push({
+      id:c.id, name:c.name, dtype:c.dtype, card:c.card,
+      p2ok:  !c.pBlock,
+      p2sk:   c.pBlock ? 'PRIMARY KEY: percentiles blocked by cardinality restriction' : null,
+      p3ok:  !c.tBlock && c.card !== 'ALL_NULL',
+      p3sk:   c.tBlock ? 'HIGH/PK: top-N distribution suppressed' : c.card === 'ALL_NULL' ? 'ALL_NULL: no values to distribute' : null,
+      p4swok: c.card !== 'ALL_NULL' && c.card !== 'CONSTANT',
+      p4swsk: c.card === 'ALL_NULL' ? 'ALL_NULL column' : c.card === 'CONSTANT' ? 'CONSTANT: Shapiro-Wilk undefined on zero-variance column' : null,
+      p4psiok: (i % 4 !== 0),
+      p4psisk: (i % 4 === 0) ? 'No baseline run configured for this column' : null
+    });
+  }
+  return g;
+}());
+var auditQ = '', auditSkipOnly = false;
+
+function buildAuditRows(data) {
+  var html = '';
+  for (var i = 0; i < data.length; i++) {
+    var c = data[i];
+    var hasSkip = !c.p2ok || !c.p3ok || !c.p4swok || !c.p4psiok;
+    var rowBg = hasSkip ? 'background:rgba(92,27,39,.3);' : '';
+    var passCell = function(ok, sk) {
+      return ok
+        ? '<span class="p-ran">\u2713 RAN</span>'
+        : '<span class="p-skip" title="' + (sk||'') + '">\u2298 SKIP <span style="font-size:9px;color:var(--t3);">\u24d8</span></span>';
+    };
+    html += '<tr style="' + rowBg + '">'
+      + '<td><span class="mono" style="font-size:11px;">' + c.name + '</span></td>'
+      + '<td><span class="mono" style="font-size:10px;color:var(--t2);">' + c.dtype + '</span></td>'
+      + '<td>' + cardBadge(c.card) + '</td>'
+      + '<td><span class="p-ran">\u2713 RAN</span></td>'
+      + '<td>' + passCell(c.p2ok, c.p2sk) + '</td>'
+      + '<td>' + passCell(c.p3ok, c.p3sk) + '</td>'
+      + '<td>' + passCell(c.p4swok, c.p4swsk) + '</td>'
+      + '<td>' + passCell(c.p4psiok, c.p4psisk) + '</td>'
+      + '</tr>';
+  }
+  return html;
+}
+
+function applyAudit() {
+  var q = auditQ, skip = auditSkipOnly;
+  var d = GATING.filter(function(c) {
+    var nm = c.name.indexOf(q) >= 0;
+    var sk = !skip || (!c.p2ok || !c.p3ok || !c.p4swok || !c.p4psiok);
+    return nm && sk;
+  });
+  var tb = document.getElementById('audit-tbody');
+  var ct = document.getElementById('audit-count');
+  if (tb) tb.innerHTML = buildAuditRows(d);
+  if (ct) ct.textContent = d.length + ' rows';
+}
+
+function renderAudit(el) {
+  el.innerHTML = ''
+    + '<div class="title">Audit \u2014 Why Was Column X Not Profiled?</div>'
+    + '<div class="subtitle">Run r-001 \u00b7 profiler_run_column_gating</div>'
+    + '<div class="callout co-b"><span style="font-size:14px;">\u2139</span>'
+    + '<span><strong>Data engineer view.</strong> Correct skips (PK \u2192 no percentiles), misconfigurations (categorical threshold too low), and failures (DB timeout) are all here. Hover \u24d8 for the skip reason.</span></div>'
+    + '<div class="toolbar">'
+    +   '<input type="text" placeholder="Filter columns\u2026" style="width:230px;" oninput="auditQ=this.value.toLowerCase();applyAudit();">'
+    +   '<label style="display:flex;gap:6px;align-items:center;font-size:12px;color:var(--t2);cursor:pointer;">'
+    +     '<input type="checkbox" id="audit-skip-chk" onchange="auditSkipOnly=this.checked;applyAudit();" style="accent-color:var(--amber);">'
+    +     'Show only columns with skipped passes'
+    +   '</label>'
+    +   '<span class="badge b-gray" id="audit-count" style="margin-left:auto;">' + GATING.length + ' rows</span>'
+    + '</div>'
+    + '<div style="border:1px solid var(--border);border-radius:6px;overflow:hidden;">'
+    +   '<div style="max-height:580px;overflow:auto;">'
+    +     '<table class="dt" style="table-layout:fixed;width:100%;min-width:820px;">'
+    +       '<thead style="position:sticky;top:0;z-index:5;"><tr>'
+    +         '<th style="width:185px;"><span class="lbl">Column</span></th>'
+    +         '<th style="width:80px;"><span class="lbl">Type</span></th>'
+    +         '<th style="width:140px;"><span class="lbl">Cardinality</span></th>'
+    +         '<th style="width:80px;"><span class="lbl">Pass 1</span></th>'
+    +         '<th style="width:85px;"><span class="lbl">Pass 2</span></th>'
+    +         '<th style="width:85px;"><span class="lbl">Pass 3</span></th>'
+    +         '<th style="width:85px;"><span class="lbl">Pass 4-SW</span></th>'
+    +         '<th style="width:85px;"><span class="lbl">Pass 4-PSI</span></th>'
+    +       '</tr></thead>'
+    +       '<tbody id="audit-tbody">' + buildAuditRows(GATING) + '</tbody>'
+    +     '</table>'
+    +   '</div>'
+    + '</div>';
+}
+
+// ── BOOT ─────────────────────────────────────────────────────────────
+buildNav();
+go('config');
+</script>
+</body>
+</html>
